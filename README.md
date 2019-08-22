@@ -1,4 +1,4 @@
-#Flink Stream Processor
+# Flink Stream Processor
 
 Apache Flink is an open source platform which is a streaming data 
 flow engine that provides communication, fault-tolerance, and 
@@ -17,12 +17,12 @@ https://ci.apache.org/projects/flink/flink-docs-stable/ops/cli.html
 Follow these documents for setup kafka environment.<br>
 https://www.sohamkamani.com/blog/2017/11/22/how-to-install-and-run-kafka/
 
-####Build Command:
+#### Build Command:
     mvn clean install
  This command will create StreamProcessor-1.0.jar file in target directory. 
  This jar file will have all the dependencies within as we have set in pom.xml file.
  
-####Shell Script:
+#### Shell Script:
     FlinkClusterStart.sh/FlinkClusterStop.sh : 
         For start and stop flink cluster. After starting cluster all subpackage code will work.
 
@@ -42,25 +42,25 @@ https://www.sohamkamani.com/blog/2017/11/22/how-to-install-and-run-kafka/
         
         
 
-##Flink Cluster UI:
+## Flink Cluster UI:
 After starting flink cluster Ui can be seen @http://localhost:8081/.
 
-####Dashboard:<br>
-Contains details related to all the running,finished,cancelled and failed application.
+#### Dashboard:<br>
+Contains details related to all the running,finished,cancelled and failed application.<br/><br/>
+<img src="images/Dashboard.png" width=900 height=400><br/>
 
-
-##Join :
+## Join :
 This subpackage consist of code doing task just like join does in SQL, code will be used to 
 join the data available in the file. Here file will be working as a table
 consist of huge data. In this we will have InnerJoin, OuterJoin, LeftOuterJoin,
 RightOuter join.
-####InnerJoin : 
+#### InnerJoin : 
     consist of all common data in two files based on joining column(just like WHERE join clause).
-####OuterJoin :
+#### OuterJoin :
     consist of all data both files are integrated together either they are matched or not.
-####LeftOuterJoin :
+#### LeftOuterJoin :
     consist of all data matching between two files and all the left file data.
-####RightOuterJoin :
+#### RightOuterJoin :
     consist of all data matching between two files and all the right file data.
 
 Note: We have 2 .txt file, timezone.txt file contains id,timezone and 
@@ -68,24 +68,25 @@ timezonesecretcode.txt contains id,secreatcode. Files in join subpackage will wo
 all the above explained scenario.
 
     
-##Stream
+## Stream
 This subpackage consists of code processing live data coming from file,socket or kafka. 
 This will make changes in incoming data and perform operation like filtering, grouping 
 and writing the generated report in either file, or in kafka. Their various api available
 to store the data in various cloud storage DB. 
 
 
-####KafkaStreamConProd.java :
+#### KafkaStreamConProd.java :
     contains logic for reading from kafka topic "flink-input" bby connecting to one of the kafka 
     nodes localhost:9093. After filtering only words longer than 5 and converting to Uppercase
     Pushing the data again to another kafka topic "flink-result" in node localhost:9093, we could 
     have used any nodes for publishing the data into kafka
     
 Kafka producer console(flink-input):<br>
-
+<img src="images/Producer.png" width=500 height=300><br/>
 Kafka consumer console(flink-result):<br>
+<img src="images/Consumer.png" width=500 height=300><br/>
 
-#####Command used for creating kafka cluster.
+##### Command used for creating kafka cluster.
     Start Zookeeper:
     —————————-------
     ./bin/zookeeper-server-start.sh config/zookeeper.properties
@@ -112,33 +113,35 @@ Kafka consumer console(flink-result):<br>
 -->Link provided above for detailed description of command used for kafka.
    
 
-####SocketStreamWordCount.java :
+#### SocketStreamWordCount.java :
     contains logic for connecting flink to socket after opening socket using cmd:"nc -l 8191" 
     then prints the word typed along with count. We are only considering words starting from "R",
     we are filtering out all the other using filter method. 
-    
-Output in logs can be seen:
+Input in websocket after connecting port:8191<br>
+<img src="images/WebSocket.png" width=500 height=300><br/>
+Output in logs can be seen:<br>
+<img src="images/LogsWebSocket.png" width=700 height=300><br/>
 
-####StreamAgeGroupSalaryAnalyser.java :
+#### StreamAgeGroupSalaryAnalyser.java :
     contains logic for dividing the salary data into age group, then calculate the average salry of each group.
     map and reduce used for calculating the result and producing output file.  
 
 
-####StreamAggregation.java : 
+#### StreamAggregation.java : 
     contains logic for calulating the min,max,sum,minBy,maxBy based on the group. keyBy() method of DataStream used for
     grouping the data, and above described method used for performing operation on group basis. In ouput we will see 
     complete list of data, but last value in the group will have the latest calculated data.
     The difference between min and minBy is that min returns the minimum value, whereas minBy returns
     the element that has the minimum value in this field (same for max and maxBy)
 
-####StreamDataSpliter.java : 
+#### StreamDataSpliter.java : 
     contains logic for dividing the passed data into various other files based on 
     the marks obtained by student. 3 files as output will get created distiction,
     pass & fail.  Command :  ./FlinkStream.sh split 
     
 
 
-#####Note: 
+##### Note: 
     ->If Flink installation location different then,make path changes in all shell script files.
     ->All report will be generated in output folder.
     ->For running application use shell script statements provided abbove  
