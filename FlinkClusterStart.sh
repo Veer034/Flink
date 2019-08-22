@@ -1,0 +1,1 @@
+/usr/local/Cellar/apache-flink/1.8.1/libexec/bin/start-cluster.sh
