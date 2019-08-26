@@ -26,65 +26,34 @@ https://www.sohamkamani.com/blog/2017/11/22/how-to-install-and-run-kafka/
     FlinkClusterStart.sh/FlinkClusterStop.sh : 
         For start and stop flink cluster. After starting cluster all subpackage code will work.
 
-    FlinkReadFile.sh :
+    FlinkStreamJoin.sh :
         For running join subpackage classes with command. Use command 'all' to execute all the file 
-        in join subpackage. Other commands are inner, leftouter, outer, rightouter using FlinkReadFile.sh.
+        in join subpackage. Other commands are inner, leftouter, outer, rightouter.
     
         For ex:
-            ./FlinkReadFile.sh leftouter
+            ./FlinkStreamJoin.sh leftouter
 
-    FlinkStream.sh :<br>
+    FlinkStreamConnector.sh :<br>
         For running stream subpackage classes with command. Various command available for running stream like 
         split,socket,kafka,salary,agg.
         
         For ex:
-            ./FlinkStream.sh kafka
+            ./FlinkStreamConnector.sh kafka
         
         
 
 ## Flink Cluster UI:
-After starting flink cluster Ui can be seen @http://localhost:8081/.
+After starting flink cluster UI can be seen @http://localhost:8081/.
 
 #### Dashboard:<br>
 Contains details related to all the running,finished,cancelled and failed application.<br/><br/>
 <img src="images/Dashboard.png" width=900 height=400><br/>
-
-## Join :
-This subpackage consist of code doing task just like join does in SQL, code will be used to 
-join the data available in the file. Here file will be working as a table
-consist of huge data. In this we will have InnerJoin, OuterJoin, LeftOuterJoin,
-RightOuter join.
-#### InnerJoin : 
-    consist of all common data in two files based on joining column(just like WHERE join clause).
-#### OuterJoin :
-    consist of all data both files are integrated together either they are matched or not.
-#### LeftOuterJoin :
-    consist of all data matching between two files and all the left file data.
-#### RightOuterJoin :
-    consist of all data matching between two files and all the right file data.
-
-Note: We have 2 .txt file, timezone.txt file contains id,timezone and 
-timezonesecretcode.txt contains id,secreatcode. Files in join subpackage will work on
-all the above explained scenario.
-
     
-## Stream
+## Connector :
 This subpackage consists of code processing live data coming from file,socket or kafka. 
 This will make changes in incoming data and perform operation like filtering, grouping 
 and writing the generated report in either file, or in kafka. Their various api available
 to store the data in various cloud storage DB. 
-
-
-#### KafkaStreamConProd.java :
-    contains logic for reading from kafka topic "flink-input" bby connecting to one of the kafka 
-    nodes localhost:9093. After filtering only words longer than 5 and converting to Uppercase
-    Pushing the data again to another kafka topic "flink-result" in node localhost:9093, we could 
-    have used any nodes for publishing the data into kafka
-    
-Kafka producer console(flink-input):<br>
-<img src="images/Producer.png" width=500 height=300><br/>
-Kafka consumer console(flink-result):<br>
-<img src="images/Consumer.png" width=500 height=300><br/>
 
 ##### Command used for creating kafka cluster.
     Start Zookeeper:
@@ -113,6 +82,21 @@ Kafka consumer console(flink-result):<br>
 -->Link provided above for detailed description of command used for kafka.
    
 
+<details><br/>
+    <summary>Code Description : Click here for more details</summary>
+<p>
+
+#### KafkaStreamConProd.java :
+    contains logic for reading from kafka topic "flink-input" by connecting to one of the kafka 
+    nodes localhost:9093. After filtering only words longer than 5 and converting to Uppercase
+    Pushing the data again to another kafka topic "flink-result" in node localhost:9093, we could 
+    have used any nodes for publishing the data into kafka
+    
+Kafka producer console(flink-input):<br>
+<img src="images/Producer.png" width=500 height=300><br/>
+Kafka consumer console(flink-result):<br>
+<img src="images/Consumer.png" width=500 height=300><br/>
+
 #### SocketStreamWordCount.java :
     contains logic for connecting flink to socket after opening socket using cmd:"nc -l 8191" 
     then prints the word typed along with count. We are only considering words starting from "R",
@@ -139,7 +123,293 @@ Output in logs can be seen:<br>
     the marks obtained by student. 3 files as output will get created distiction,
     pass & fail.  Command :  ./FlinkStream.sh split 
     
+</p>
+</details>
 
+## Operator :
+Operators transform one or more DataStreams into a new DataStream. Programs can combine multiple transformations into 
+sophisticated dataflow topologies.
+<details><br/>
+<summary>Description : Click here for more details</summary>
+<p>
+
+### Event Time :
+This subpackage consist of code generating data for live streaming on the port, in different types of event form like 
+eventtime, processingtime. These generated data will be used by window subpackage for using data in different types 
+of windows. i.e tumbling, sliding, session & global.
+<details><br/>
+<summary>Description : Click here for more details</summary>
+<p>
+
+#### Processing time : 
+    Processing time refers to the system time of the machine that is executing the respective operation.
+#### Event time : 
+    Event time is the time that each individual event occurred on its producing device. This time is typically embedded 
+    within the records before they enter Flink, and that event timestamp can be extracted from each record.
+#### Ingestion time: 
+    Ingestion time is the time that events enter Flink. At the source operator each record gets the source’s current 
+    time as a timestamp, and time-based operations (like time windows) refer to that timestamp.
+
+### Watermarks :     
+The mechanism in Flink to measure progress in event time.Watermarks flow as part of the data stream and carry a 
+timestamp t. A Watermark(t) declares that event time has reached time t in that stream, meaning that there should 
+be no more elements from the stream with a timestamp t’ <= t (i.e. events with timestamps older or equal to the watermark).
+
+#### Timestamp Assigners / Watermark Generators :
+    Timestamp assigners take a stream and produce a new stream with timestamped elements and watermarks. If the original
+    stream had timestamps and/or watermarks already, the timestamp assigner overwrites them
+
+#### Periodic Watermarks :
+    AssignerWithPeriodicWatermarks assigns timestamps and generates watermarks periodically (possibly depending on the 
+    stream elements, or purely based on processing time).
+
+#### Punctuated Watermarks :
+    To generate watermarks whenever a certain event indicates that a new watermark might be generated, use 
+    AssignerWithPunctuatedWatermarks.
+    
+Note :  Flink comes with some pre-implemented timestamp assigners. AscendingTimestampExtractor: for periodic watermark 
+generation is the case where timestamps seen by a given source task occur in ascending order.
+BoundedOutOfOrdernessTimestampExtractor : for an argument the maxOutOfOrderness, i.e. the maximum amount of time an 
+element is allowed to be late before being ignored when computing the final result for the given window. Lateness 
+corresponds to the result of t - t_w, where t is the (event-time) timestamp of an element, and t_w that of the previous 
+watermark. If lateness > 0 then the element is considered late and is, by default, ignored when computing the result of 
+the job for its corresponding window.
+For more details visit : https://ci.apache.org/projects/flink/flink-docs-master/dev/event_time.html
+
+</p>
+</details>
+
+##### Note :
+For more details visit : https://ci.apache.org/projects/flink/flink-docs-stable/dev/event_time.html
+
+    
+### Join :
+This subpackage consist of code doing task just like join does in SQL, code will be used to 
+join the data available in the file. Here file will be working as a table
+consist of huge data. In this we will have InnerJoin, OuterJoin, LeftOuterJoin,
+RightOuter join.
+<details><br/>
+<p>
+
+#### InnerJoin : 
+    consist of all common data in two files based on joining column(just like WHERE join clause).
+#### OuterJoin :
+    consist of all data both files are integrated together either they are matched or not.
+#### LeftOuterJoin :
+    consist of all data matching between two files and all the left file data.
+#### RightOuterJoin :
+    consist of all data matching between two files and all the right file data.
+
+Note: We have 2 .txt file, timezone.txt file contains id,timezone and 
+timezonesecretcode.txt contains id,secreatcode. Files in join subpackage will work on
+all the above explained scenario.
+</p>
+</details>
+
+### Window :
+This subpackage consists of code processing the request coming form socket or stream-processing tools in different 
+types of windows. Windows are at the heart of processing infinite streams. Windows split the stream into “buckets” 
+of finite size, over which we can apply computations A WindowAssigner is responsible for assigning each incoming 
+element to one or more windows. Flink comes with pre-defined window assigners for the most common use cases, namely 
+`tumbling windows, sliding windows, session windows and global windows`.
+<details><br/>
+<summary>Description : Click here for more details</summary>
+<p>
+
+#### Tumbling Window :
+    divide incoming data stream in non-overlapping group or window based on rules like timestamp ,element counts, 
+    a combination of counts and time, or some custom logic to assign elements to window. In window() method we pass
+    window size, which makes sure to evaluate current window after set time.
+    
+#### Sliding Windows :
+    divide incoming data just like tumbling, but only difference between twos are data can be overlapping in group 
+    or window. In window() method we pass window size and slide values parameter controls how frequently a sliding
+    window is started. Sliding windows can be overlapping if the slide is smaller than the window size.
+
+#### Session Windows :
+    divide incoming data to window based on time of incoming data, window get closed when data is not coming 
+    for the certain period of time i.e., when a gap of inactivity occurred. This window doesn't overlap and doesn't 
+    have fixed start or end time. When current window expires, new data will get added to new window.
+Note: Dynamic gaps are specified by implementing the SessionWindowTimeGapExtractor interface.
+Since session windows do not have a fixed start and end, they are evaluated differently than tumbling and sliding 
+windows. Internally, a session window operator creates a new window for each arriving record and merges windows 
+together if they are closer to each other than the defined gap. In order to be mergeable, a session window operator
+requires a merging Trigger and a merging Window Function, such as ReduceFunction, AggregateFunction, or
+ProcessWindowFunction (FoldFunction cannot merge.)
+
+#### Global Windows :
+    divide the incoming data into windows based on key, for using this custom trigger method need to be written. 
+    Otherwise no computation will be perfomed.
+    
+### Window Functions :
+This group of function are used for computation of data assigned to window. Once window get ready for processing one
+of the function `ReduceFunction, AggregateFunction, FoldFunction or ProcessWindowFunction` 
+<details><br/>
+<summary>Description : Click here for more details</summary>
+<p>
+
+#### ReduceFunction :
+    T reduce(T var1, T var2) : combined two passed parameter of same type to produce an output element of the same type.
+
+#### AggregateFunction :
+    generalised version of ReduceFunction. consist of an input type (IN), accumulator type (ACC), and an output
+    type (OUT) parameter. Used for aggregation logic implementation.
+
+#### FoldFunction :
+     input element of the window is combined with an element of the output type. The FoldFunction is incrementally 
+     called for each element that is added to the window and the current output value.
+ Note: fold() cannot be used with session windows or other mergeable windows.
+ 
+#### ProcessWindowFunction :
+    consist of all the element of window in iterator object, which will be used for processing the data. This class 
+    has extra details like  Context object with access to time and state information, which enables it to provide more
+    flexibility than other window functions.  This comes at the cost of performance and resource consumption, because 
+    elements cannot be incrementally aggregated but instead need to be buffered internally until the window is
+    considered ready for processing.
+    
+Note: 
+1. The key parameter is the key that is extracted via the KeySelector that was specified for the keyBy() invocation. 
+   In scenario of tuple as key, we need to extract the correct value from tuple for setting as key.   
+2. A ProcessWindowFunction can be combined with either a ReduceFunction, an AggregateFunction, or a FoldFunction to
+   incrementally aggregate elements as they arrive in the window.  
+
+</p>
+</details><br/>
+
+### Trigger :
+A Trigger determines when a window (as formed by the window assigner) is ready to be processed by the window function.
+Each WindowAssigner comes with a default Trigger. If the default trigger does not fit your needs, you can specify a 
+custom trigger using trigger(...).
+<details><br/>
+<summary>Description : Click here for more details</summary>
+<p>
+The trigger interface has five methods that allow a Trigger to react to different events:
+
+    onElement(): called for each element that is added to a window.
+    onEventTime(): called when a registered event-time timer fires.
+    onProcessingTime(): called when a registered processing-time timer fires.
+    onMerge(): for stateful triggers and merges the states of two triggers when their corresponding windows merge, 
+                e.g. when using session windows.
+    clear(): for performs any action needed upon removal of the corresponding window.
+
+
+The first three decide how to act on their invocation event by returning a TriggerResult. The action can be one of the following:
+    
+    CONTINUE: do nothing,
+    FIRE: trigger the computation, keeps the contents of the window,
+    PURGE: clear the elements in the window, and
+    FIRE_AND_PURGE: trigger the computation and clear the elements in the window afterwards.
+
+ 
+#### Default Triggers of WindowAssigners
+The default Trigger of a WindowAssigner is appropriate for many use cases. For example, all the event-time window 
+assigners have an EventTimeTrigger as default trigger. This trigger simply fires once the watermark passes the end of a window.
+
+Note:
+1. Attention The default trigger of the GlobalWindow is the NeverTrigger which does never fire. Consequently, you always 
+have to define a custom trigger when using a GlobalWindow.
+2. Attention By specifying a trigger using trigger() you are overwriting the default trigger of a WindowAssigner. 
+For example, if you specify a CountTrigger for TumblingEventTimeWindows you will no longer get window firings based on 
+the progress of time but only by count. Right now, you have to write your own custom trigger if you want to react based 
+on both time and count.
+
+#### Built-in and Custom Triggers
+Flink comes with a few built-in triggers.
+
+    -The (already mentioned) EventTimeTrigger fires based on the progress of event-time as measured by watermarks.
+    -The ProcessingTimeTrigger fires based on processing time.
+    -The CountTrigger fires once the number of elements in a window exceeds the given limit.
+    -The PurgingTrigger takes as argument another trigger and transforms it into a purging one.
+
+</p>
+</details>
+
+### Evictors :
+The evictor has the ability to remove elements from a window after the trigger fires and before and/or after the window
+function is applied
+<details><br/>
+<summary>Description : Click here for more details</summary>
+<p>
+    
+    //contains the eviction logic to be applied before the window function,
+    void evictBefore(Iterable<TimestampedValue<T>> elements, int size, W window, EvictorContext evictorContext);
+    
+    //contains the one to be applied after the window function
+    void evictAfter(Iterable<TimestampedValue<T>> elements, int size, W window, EvictorContext evictorContext);
+
+Flink comes with three pre-implemented evictors. These are:
+##### CountEvictor :
+keeps up to a user-specified number of elements from the window and discards the remaining ones from the beginning of
+ the window buffer.
+ 
+##### DeltaEvictor :
+takes a DeltaFunction and a threshold, computes the delta between the last element in the window buffer and each of the 
+remaining ones, and removes the ones with a delta greater or equal to the threshold.
+
+##### TimeEvictor : 
+takes as argument an interval in milliseconds and for a given window, it finds the maximum timestamp max_ts among its 
+elements and removes all the elements with timestamps smaller than max_ts - interval.
+
+Note :
+1. Specifying an evictor prevents any pre-aggregation, as all the elements of a window have to be passed to 
+the evictor before applying the computation.
+
+2. Attention Flink provides no guarantees about the order of the elements within a window. This implies that although 
+an evictor may remove elements from the beginning of the window, these are not necessarily the ones that arrive first 
+or last.
+
+</p>
+</details>
+
+</p>
+</details>
+
+##### Note :
+For more details visit : https://ci.apache.org/projects/flink/flink-docs-stable/dev/stream/operators/windows.html
+
+
+<details><br/>
+    <summary>Code Description : Click here for more details</summary>
+<p>
+
+#### GlobalWindow.java :
+    contains logic for creating the global window for the passed data in websocket.  trigger() set as CountTrigger, 
+    whenever the count reaches the value event processed. To run this event subpackgae event 
+    SessionWindowProcessingTimeProducer.java used for creating the input, then run this main method. In result we will 
+    see the calculated output for each window.
+#### SessionEventTimeWindow.java :
+    contains logic for creating the session window bases on event time for the passed data in websocket.  
+    assignTimestampsAndWatermarks(), here we are using the first parameter for setting the timestamp. To run this 
+    subpackgae event SessionWindowEventTimeProducer.java class used for creating the input first, then run this main method.
+    In result we will see the calculated output for each window. 
+#### SessionProcessingTimeWindow.java :
+    contains logic for creating the session window based on processing time set while performing the operation.To run this
+    subpackgae event SessionWindowProcessingTimeProducer.java class used for creating the input first, then run this 
+    method. In result we will see the calculated output for each window. 
+#### SlidingEventTimeWindow.java :
+    contains logic for creating the window based on set timestamp for window and sliding in windowAll() method. 
+    assignTimestampsAndWatermarks() method used for setting the timestamp passed in data as watermark. To run this 
+    subpackgae event SlidingTumblingEventTimeProducer.java class used for creating the input first, then run this method.
+    In result we will see the calculated output for each window. 
+#### SlidingProcessingTimeWindow.java :
+    contains logic for creating the window based on processing time set while performing the operation. Window time duration 
+    and sliding time is used for creating the window. To run this subpackgae event SlidingTumblingProcessingTimeProducer.java 
+    class used for creating the input first,then run this method. In result we will see the calculated output for each window. 
+#### TumblingEventTimeWindow.java :
+    contains logic for creating the window with fixed size and based on timestamp passed from the producer in data 
+    stream,To run this subpackgae event SlidingTumblingEventTimeProducer.java class used for creating the input first, 
+    then run this method.In result we will see the calculated output for each window. 
+#### TumblingProcessingTimeWindow.java :
+    contains logic for creating the window with fixed size and based on based on processing time set while performing 
+    the operation. To run this subpackgae event SlidingTumblingProcessingTimeProducer.java class used for creating the input first, 
+    then run this method.In result we will see the calculated output for each window. 
+    
+</p>
+</details>
+
+
+</p>
+</details>
 
 ##### Note: 
     ->If Flink installation location different then,make path changes in all shell script files.
