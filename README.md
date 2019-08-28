@@ -49,7 +49,7 @@ After starting flink cluster UI can be seen @http://localhost:8081/.
 Contains details related to all the running,finished,cancelled and failed application.<br/><br/>
 <img src="images/Dashboard.png" width=900 height=400><br/>
     
-## Connector :
+## 1. Connector :
 This subpackage consists of code processing live data coming from file,socket or kafka. 
 This will make changes in incoming data and perform operation like filtering, grouping 
 and writing the generated report in either file, or in kafka. Their various api available
@@ -126,14 +126,14 @@ Output in logs can be seen:<br>
 </p>
 </details>
 
-## Operator :
+## 2.  Operator :
 Operators transform one or more DataStreams into a new DataStream. Programs can combine multiple transformations into 
 sophisticated dataflow topologies.
 <details><br/>
 <summary>Description : Click here for more details</summary>
 <p>
 
-### Event Time :
+### 2.1 Event Time :
 This subpackage consist of code generating data for live streaming on the port, in different types of event form like 
 eventtime, processingtime. These generated data will be used by window subpackage for using data in different types 
 of windows. i.e tumbling, sliding, session & global.
@@ -183,7 +183,7 @@ For more details visit : https://ci.apache.org/projects/flink/flink-docs-master/
 For more details visit : https://ci.apache.org/projects/flink/flink-docs-stable/dev/event_time.html
 
     
-### Join :
+### 2.2 Join :
 This subpackage consist of code doing task just like join does in SQL, code will be used to 
 join the data available in the file. Here file will be working as a table
 consist of huge data. In this we will have InnerJoin, OuterJoin, LeftOuterJoin,
@@ -206,7 +206,7 @@ all the above explained scenario.
 </p>
 </details>
 
-### Window :
+### 2.3 Window :
 This subpackage consists of code processing the request coming form socket or stream-processing tools in different 
 types of windows. Windows are at the heart of processing infinite streams. Windows split the stream into “buckets” 
 of finite size, over which we can apply computations A WindowAssigner is responsible for assigning each incoming 
@@ -227,7 +227,7 @@ element to one or more windows. Flink comes with pre-defined window assigners fo
     window is started. Sliding windows can be overlapping if the slide is smaller than the window size.
 
 #### Session Windows :
-    divide incoming data to window based on time of incoming data, window get closed when data is not coming 
+    divide incoming data toa window based on time of incoming data, window get closed when data is not coming 
     for the certain period of time i.e., when a gap of inactivity occurred. This window doesn't overlap and doesn't 
     have fixed start or end time. When current window expires, new data will get added to new window.
 Note: Dynamic gaps are specified by implementing the SessionWindowTimeGapExtractor interface.
@@ -276,7 +276,7 @@ Note:
 </p>
 </details><br/>
 
-### Trigger :
+### 2.3.1 Trigger :
 A Trigger determines when a window (as formed by the window assigner) is ready to be processed by the window function.
 Each WindowAssigner comes with a default Trigger. If the default trigger does not fit your needs, you can specify a 
 custom trigger using trigger(...).
@@ -324,7 +324,7 @@ Flink comes with a few built-in triggers.
 </p>
 </details>
 
-### Evictors :
+### 2.3.2 Evictors :
 The evictor has the ability to remove elements from a window after the trigger fires and before and/or after the window
 function is applied
 <details><br/>
@@ -403,11 +403,125 @@ For more details visit : https://ci.apache.org/projects/flink/flink-docs-stable/
     contains logic for creating the window with fixed size and based on based on processing time set while performing 
     the operation. To run this subpackgae event SlidingTumblingProcessingTimeProducer.java class used for creating the input first, 
     then run this method.In result we will see the calculated output for each window. 
-    
+
+##### Note:    
+Use flink command to execute: `/usr/local/Cellar/apache-flink/1.8.1/bin/flink run -c com.flink.stream.window.TumblingProcessingTimeWindow target/StreamProcessor-1.0.jar`
+
 </p>
 </details>
 
+### 2.6 State :
 
+It is snapshot of application on particular time with information about past input and events.
+Keyed State and Operator State exist in two forms: `managed` and `raw`.
+
+<details><br/>
+<summary>Description : Click here for more details</summary>
+<p>
+
+#### Keyed State :
+Keyed State is always relative to keys and can only be used in functions and operators on a KeyedStream.
+
+##### Managed Key State :
+    represented in data structures controlled by the Flink runtime, such as internal hash tables, or RocksDB. 
+    Examples are “ValueState”, “ListState”, "ReducingState", "AggregatingState", "MapState" etc. Flink’s runtime encodes 
+    the states and writes them into the checkpoints.
+
+##### StateDescriptor :
+
+ This holds the name of the state, the type of the values that the state holds, and possibly a user-specified function, 
+ such as a ReduceFunction.Depending on what type of state you want to retrieve, you create either a ValueStateDescriptor, 
+ a ListStateDescriptor, a ReducingStateDescriptor, a FoldingStateDescriptor or a MapStateDescriptor.
+ 
+##### State Time-To-Live(TTL) :
+A time-to-live (TTL) can be assigned to the keyed state of any type. If a TTL is configured and a state value has 
+expired, the stored value will be cleaned up on a best effort basis.All state collection types support per-entry TTLs. 
+This means that list elements and map entries expire independently.
+
+##### Raw Key State :
+    It is state that operators keep in their own data structures. When checkpointed, they only write a sequence of bytes 
+    into the checkpoint. Flink knows nothing about the state’s data structures and sees only the raw bytes.
+
+
+#### Operator State :
+Operator State (or non-keyed state), each operator state is bound to one parallel operator instance. The Kafka Connector 
+is a good motivating example for the use of Operator State in Flink. 
+
+##### Managed Operator State :
+To use managed operator state, a stateful function can implement either the more general CheckpointedFunction interface, 
+or the ListCheckpointed<T extends Serializable> interface.
+
+##### Checkpoints :
+It allow Flink to recover state and positions in the streams to give the application the same semantics as a 
+failure-free execution.checkpointing is disabled. To enable checkpointing, call enableCheckpointing(n) on the 
+StreamExecutionEnvironment, where n is the checkpoint interval in milliseconds.
+    
+    exactly-once vs. at-least-once: mode to the enableCheckpointing(n) method to choose between the two guarantee levels
+    checkpoint timeout: abort checkpointing if operation didn't finished in given time.
+    minimum time between checkpoints:  set gap between two checkpointing. After the previous checkpoint completed, 
+    regardless of the checkpoint duration and the checkpoint interval.
+    number of concurrent checkpoints: to allow for multiple overlapping checkpoints, which is interesting for pipelines
+    that have a certain processing delay  
+    fail/continue task on checkpoint errors : if a task will be failed if an error occurs in the execution of the 
+    task’s checkpoint procedure.
+    prefer checkpoint for recovery: This determines if a job will fallback to latest checkpoint even when there are more 
+    recent savepoints available to potentially reduce recovery time.
+
+##### CheckpointedFunction :
+The CheckpointedFunction interface provides access to non-keyed state with different redistribution schemes. 
+It requires the implementation of two methods:
+
+    void snapshotState(FunctionSnapshotContext context) throws Exception;
+    
+    void initializeState(FunctionInitializationContext context) throws Exception;
+
+Whenever a checkpoint has to be performed, snapshotState() is called. The counterpart, initializeState(), is called 
+every time the user-defined function is initialized, be that when the function is first initialized or be that when the 
+function is actually recovering from an earlier checkpoint. Given this, initializeState() is not only the place where 
+different types of state are initialized, but also where state recovery logic is included.
+
+#### Broadcast State :
+Broadcast introduced to support use cases where some data coming from one stream is required to be broadcasted to all 
+downstream tasks, where it is stored locally and is used to process all incoming elements on the other stream.
+
+
+
+##### Note :
+For more details visit :: https://ci.apache.org/projects/flink/flink-docs-release-1.9/dev/stream/state/state.html
+</p>
+</details>
+
+<details><br/>
+    <summary>Code Description : Click here for more details</summary>
+<p>
+
+#### BroadcastImpl.java :
+      contains logic for creating a broadcast stream for all the avilable node to use info for processing the incoming 
+      stream of data. To use this class execute BroadcastProducer class in prodevent subpackage for creating the input 
+      through websocket.
+#### CheckPointStateImpl.java :
+    consist logic for creating checkpoint with configuration details of all the stream, for making the system rigid in 
+    case of failure while processing the stream. To use this class execute StateProducer class in prodevent subpackage 
+    for creating input through websocket.
+#### ListStateImpl.java :
+    consist logic for creating List state for the incoming stream , process the list when threshold reached. Can append 
+    elements and retrieve an Iterable over all currently stored elements To use this class execute StateProducer class 
+    in prodevent subpackage for creating input through websocket.
+#### ReduceStateImpl.java :
+    consist logic for keeping a single value that represents the aggregation of all values added to the state.To use this 
+    class in prodevent subpackage execute StateProducer class for creating input through websocket.
+#### ValueStateImpl.java :
+    consist logic for keeping a value that can be updated and retrieved.To use this class execute StateProducer class 
+    in prodevent subpackage for creating input through websocket.
+    
+##### Note:    
+Use flink command to execute: `/usr/local/Cellar/apache-flink/1.8.1/bin/flink run -c com.flink.stream.state.BroadcastImpl target/StreamProcessor-1.0.jar`
+
+</p>  
+</p>
+</details>
+
+  
 </p>
 </details>
 

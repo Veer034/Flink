@@ -1,10 +1,10 @@
 package com.flink.stream.connector;
 
 
-import org.apache.flink.api.common.functions.*;
-import org.apache.flink.api.java.*;
-import org.apache.flink.api.java.tuple.*;
-import org.apache.flink.api.java.utils.*;
+import org.apache.flink.api.common.functions.FilterFunction;
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
@@ -26,7 +26,7 @@ public class SocketStreamWordCount {
          * to group the words if same word typed in the socket. Then sum method is used to add the returned value
          * stored in Tuple2 by Tokenizer class
          */
-         DataStream<Tuple2<String, Integer>> counts = ping.filter(new FilterFunction<String>() {
+        DataStream<Tuple2<String, Integer>> counts = ping.filter(new FilterFunction<String>() {
             //Will consider only word starting with "R", rest other will be filtered out
             public boolean filter(String value) {
                 return value.startsWith("R");

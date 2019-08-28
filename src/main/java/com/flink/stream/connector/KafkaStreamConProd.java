@@ -4,12 +4,12 @@ package com.flink.stream.connector;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
+
 import java.util.Properties;
 
 public class KafkaStreamConProd {
@@ -43,8 +43,9 @@ public class KafkaStreamConProd {
         DataStream<String> result = stream.filter(new FilterFunction<String>() {
             //For filtering all word less than length of 6.
             public boolean filter(String value) {
-                return value.length()>5;
-            }});
+                return value.length() > 5;
+            }
+        });
 
         //Printing the result, which can be seen in the log
         result.print();
