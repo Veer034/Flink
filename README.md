@@ -410,7 +410,7 @@ Use flink command to execute: `/usr/local/Cellar/apache-flink/1.8.1/bin/flink ru
 </p>
 </details>
 
-### 2.6 State :
+### 2.4 State :
 
 It is snapshot of application on particular time with information about past input and events.
 Keyed State and Operator State exist in two forms: `managed` and `raw`.
